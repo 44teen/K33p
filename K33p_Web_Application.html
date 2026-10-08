@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-neutral-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>K33p — Task Management</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* CRITICAL: Strictly prevent mobile/iOS zoom on typing by setting 16px font-size */
+        input, textarea, select {
+            font-size: 16px !important;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        /* Prevent gestures & scale zoom */
+        html, body {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            height: 100%;
+        }
+
+        /* Hide scrollbars for clean minimal aesthetic */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Smooth UI page switching */
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="h-full bg-neutral-900 text-neutral-900 flex justify-center items-center p-0 md:p-6">
+
+    <div class="w-full max-w-md h-full md:h-[844px] bg-white md:rounded-[44px] shadow-2xl overflow-hidden flex flex-col relative border border-neutral-800/20">
+
+        <!-- Top Header Bar (No wifi/battery/clock status bars) -->
+        <header class="px-6 pt-5 pb-3 flex justify-between items-center bg-white/90 backdrop-blur-md sticky top-0 z-20 border-b border-neutral-100">
+            <div class="flex items-center gap-3">
+                <!-- Geometric '33' Minimalist Logo -->
+                <div class="w-9 h-9 bg-black rounded-xl flex items-center justify-center shadow-md relative overflow-hidden">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 6C4 4.89543 4.89543 4 6 4H10C11.1046 4 12 4.89543 12 6V10C12 11.1046 11.1046 12 10 12H6C4.89543 12 4 11.1046 4 10V6Z" fill="white"/>
+                        <path d="M4 14C4 12.8954 4.89543 12 6 12H10C11.1046 12 12 12.8954 12 14V18C12 19.1046 11.1046 20 10 20H6C4.89543 20 4 19.1046 4 18V14Z" fill="white" fill-opacity="0.5"/>
+                        <path d="M13 6C13 4.89543 13.8954 4 15 4H19C20.1046 4 21 4.89543 21 6V10C21 11.1046 20.1046 12 19 12H15C13.8954 12 13 11.1046 13 10V6Z" fill="white"/>
+                        <path d="M13 14C13 12.8954 13.8954 12 15 12H19C20.1046 12 21 12.8954 21 14V18C21 19.1046 20.1046 20 19 20H15C13.8954 20 13 19.1046 13 18V14Z" fill="white" fill-opacity="0.5"/>
+                    </svg>
+                </div>
+                <span class="font-bold text-xl tracking-tight text-black">K33p</span>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button id="btn-notifications" onclick="openNotificationsModal()" class="w-9 h-9 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition text-neutral-800 relative">
+                    <i class="fa-regular fa-bell text-sm"></i>
+                    <span id="notif-badge" class="hidden absolute top-2 right-2 w-2 h-2 bg-black rounded-full ring-2 ring-white"></span>
+                </button>
+                <button onclick="openProfileModal()" class="w-9 h-9 rounded-full bg-black text-white text-xs font-semibold flex items-center justify-center shadow-sm overflow-hidden">
+                    <span id="avatar-initials">U</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Scrollable Body Area -->
+        <main class="flex-1 overflow-y-auto no-scrollbar px-6 py-4 space-y-6">
+
+            <section id="tab-beranda" class="tab-content active space-y-5">
+                <!-- Neutral Clean Greeting -->
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-black" id="greeting-title" data-i18n="welcome">Selamat Datang</h1>
+                    <p class="text-xs text-neutral-500 font-medium mt-0.5" id="greeting-subtitle" data-i18n="subtitle">Kelola tugas harian Anda dengan efisien.</p>
+                </div>
+
+                <!-- Dashboard Task Counter Card (Starts at 0) -->
+                <div class="bg-black text-white p-5 rounded-3xl shadow-xl space-y-4">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-[10px] font-semibold tracking-wider text-neutral-400 uppercase" data-i18n="total_tasks">TOTAL TUGAS</p>
+                            <p class="text-4xl font-extrabold tracking-tight mt-1" id="stat-total">0</p>
+                        </div>
+                        <div class="w-9 h-9 bg-neutral-800 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-check text-xs text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <span class="px-3 py-1 bg-neutral-800/80 rounded-full text-xs font-medium text-neutral-300 border border-neutral-700/50" id="stat-done">0 Selesai</span>
+                        <span class="px-3 py-1 bg-neutral-800/80 rounded-full text-xs font-medium text-neutral-300 border border-neutral-700/50" id="stat-pending">0 Belum</span>
+                    </div>
+                </div>
+
+                <!-- Quick Filter Buttons -->
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="filterCategory('semua')" class="cat-btn flex flex-col items-center justify-center p-3 rounded-2xl bg-neutral-100 hover:bg-neutral-200 transition border border-transparent active:scale-95" data-cat="semua">
+                        <i class="fa-solid fa-list-ul text-base mb-1.5 text-black"></i>
+                        <span class="text-[11px] font-medium text-neutral-700" data-i18n="all">Semua</span>
+                    </button>
+                    <button onclick="filterCategory('tinggi')" class="cat-btn flex flex-col items-center justify-center p-3 rounded-2xl bg-neutral-100 hover:bg-neutral-200 transition border border-transparent active:scale-95" data-cat="tinggi">
+                        <i class="fa-solid fa-fire text-base mb-1.5 text-black"></i>
+                        <span class="text-[11px] font-medium text-neutral-700" data-i18n="high">Tinggi</span>
+                    </button>
+                    <button onclick="switchTab('kalender')" class="flex flex-col items-center justify-center p-3 rounded-2xl bg-neutral-100 hover:bg-neutral-200 transition border border-transparent active:scale-95">
+                        <i class="fa-regular fa-calendar text-base mb-1.5 text-black"></i>
+                        <span class="text-[11px] font-medium text-neutral-700" data-i18n="calendar">Kalender</span>
+                    </button>
+                    <button onclick="filterCategory('kuliah')" class="cat-btn flex flex-col items-center justify-center p-3 rounded-2xl bg-neutral-100 hover:bg-neutral-200 transition border border-transparent active:scale-95" data-cat="kuliah">
+                        <i class="fa-solid fa-graduation-cap text-base mb-1.5 text-black"></i>
+                        <span class="text-[11px] font-medium text-neutral-700" data-i18n="matkul">Kuliah</span>
+                    </button>
+                </div>
+
+                <!-- Today Tasks Section -->
+                <div class="space-y-3 pt-2">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-base font-bold text-black tracking-tight" data-i18n="today_tasks">Tugas Hari Ini</h2>
+                        <button onclick="switchTab('tugas')" class="text-xs font-semibold text-neutral-500 hover:text-black transition" data-i18n="see_all">Lihat Semua</button>
+                    </div>
+
+                    <!-- Dynamic Task List Container -->
+                    <div id="today-tasks-list" class="space-y-2.5">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </section>
+
+            <section id="tab-tugas" class="tab-content space-y-4">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-2xl font-bold tracking-tight text-black" data-i18n="all_tasks">Semua Tugas</h1>
+                    <div class="flex gap-2">
+                        <button onclick="openSearchModal()" class="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-700">
+                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Pills -->
+                <div class="flex gap-1.5 bg-neutral-100 p-1 rounded-xl text-xs font-medium">
+                    <button onclick="setTaskFilter('all')" id="filter-all" class="flex-1 py-1.5 rounded-lg bg-white shadow-sm font-semibold text-black transition" data-i18n="all">Semua</button>
+                    <button onclick="setTaskFilter('pending')" id="filter-pending" class="flex-1 py-1.5 rounded-lg text-neutral-500 hover:text-black transition" data-i18n="pending">Belum Selesai</button>
+                    <button onclick="setTaskFilter('done')" id="filter-done" class="flex-1 py-1.5 rounded-lg text-neutral-500 hover:text-black transition" data-i18n="done">Selesai</button>
+                </div>
+
+                <!-- Task Items Container -->
+                <div id="all-tasks-list" class="space-y-2.5 pt-1">
+                    <!-- Dynamic tasks -->
+                </div>
+            </section>
+
+            <section id="tab-kalender" class="tab-content space-y-4">
+                <h1 class="text-2xl font-bold tracking-tight text-black" data-i18n="calendar">Kalender</h1>
+                
+                <!-- Calendar View Widget -->
+                <div class="bg-neutral-50 p-4 rounded-3xl border border-neutral-200/60 space-y-3">
+                    <div class="flex justify-between items-center text-sm font-semibold px-1">
+                        <button onclick="changeMonth(-1)" class="p-1 hover:bg-neutral-200 rounded-lg text-neutral-600"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                        <span id="calendar-month-year" class="text-black">Oktober 2026</span>
+                        <button onclick="changeMonth(1)" class="p-1 hover:bg-neutral-200 rounded-lg text-neutral-600"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                    </div>
+
+                    <div class="grid grid-cols-7 text-center text-[10px] font-bold text-neutral-400" id="calendar-week-headers">
+                        <span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span>
+                    </div>
+
+                    <div id="calendar-days-grid" class="grid grid-cols-7 gap-1 text-center text-xs font-medium">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-2">
+                    <h2 class="text-sm font-bold text-black tracking-tight" data-i18n="schedule_for_date">Jadwal Tanggal Ini</h2>
+                    <div id="calendar-tasks-list" class="space-y-2">
+                        <!-- Dynamic list for selected date -->
+                    </div>
+                </div>
+            </section>
+
+            <section id="tab-profil" class="tab-content space-y-5">
+                <h1 class="text-2xl font-bold tracking-tight text-black" data-i18n="profile_settings">Profil & Pengaturan</h1>
+
+                <!-- Profile Info Card -->
+                <div class="bg-neutral-50 p-4 rounded-3xl border border-neutral-200/60 flex items-center gap-4">
+                    <div class="w-14 h-14 bg-black text-white rounded-full flex items-center justify-center font-bold text-xl shadow-md" id="profile-avatar-large">
+                        U
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h2 class="text-base font-bold text-black truncate" id="profile-display-name">Pengguna K33p</h2>
+                        <p class="text-xs text-neutral-500 truncate" id="profile-display-email">pengguna@k33p.app</p>
+                        <span id="auth-status-badge" class="inline-block mt-1 text-[10px] bg-neutral-200 px-2 py-0.5 rounded-full font-medium text-neutral-700" data-i18n="local_account">Akun Lokal</span>
+                    </div>
+                    <button onclick="openEditProfileModal()" class="w-8 h-8 rounded-full bg-neutral-200/80 hover:bg-neutral-300 flex items-center justify-center text-neutral-700 transition">
+                        <i class="fa-solid fa-pen text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Stats counter -->
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="bg-neutral-100 p-3 rounded-2xl">
+                        <p class="text-xs text-neutral-500" data-i18n="total">Total</p>
+                        <p class="text-lg font-bold text-black mt-0.5" id="profile-stat-total">0</p>
+                    </div>
+                    <div class="bg-neutral-100 p-3 rounded-2xl">
+                        <p class="text-xs text-neutral-500" data-i18n="done">Selesai</p>
+                        <p class="text-lg font-bold text-black mt-0.5" id="profile-stat-done">0</p>
+                    </div>
+                    <div class="bg-neutral-100 p-3 rounded-2xl">
+                        <p class="text-xs text-neutral-500" data-i18n="pending">Belum</p>
+                        <p class="text-lg font-bold text-black mt-0.5" id="profile-stat-pending">0</p>
+                    </div>
+                </div>
+
+                <!-- Settings List -->
+                <div class="bg-neutral-50 rounded-3xl border border-neutral-200/60 overflow-hidden divide-y divide-neutral-200/50">
+                    
+                    <!-- Language Selection Selector -->
+                    <div class="px-4 py-3.5 flex items-center justify-between text-left">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-globe text-black text-sm"></i>
+                            <span class="text-xs font-semibold text-neutral-800" data-i18n="select_language">Bahasa / Language</span>
+                        </div>
+                        <select id="language-selector" onchange="changeLanguage(this.value)" class="bg-neutral-200/80 text-black text-xs font-semibold px-2.5 py-1 rounded-xl outline-none border border-transparent focus:border-black transition cursor-pointer">
+                            <option value="id">Bahasa Indonesia</option>
+                            <option value="en">English</option>
+                            <option value="ko">한국어 (Korean)</option>
+                            <option value="ja">日本語 (Japanese)</option>
+                            <option value="th">ไทย (Thai)</option>
+                            <option value="fil">Filipino (Tagalog)</option>
+                        </select>
+                    </div>
+
+                    <!-- Manage Custom Student Courses -->
+                    <button onclick="openManageCoursesModal()" class="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-neutral-100 transition">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-graduation-cap text-black text-sm"></i>
+                            <span class="text-xs font-semibold text-neutral-800" data-i18n="manage_courses">Kelola Mata Kuliah</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-xs text-neutral-400"></i>
+                    </button>
+
+                    <!-- Google Authentication -->
+                    <button onclick="openLoginModal()" class="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-neutral-100 transition">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-brands fa-google text-black text-sm"></i>
+                            <span class="text-xs font-semibold text-neutral-800" id="google-btn-text" data-i18n="login_google">Masuk dengan Google</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-xs text-neutral-400"></i>
+                    </button>
+
+                    <!-- Web / Device Notifications & Testing -->
+                    <button onclick="requestNotificationPermission()" class="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-neutral-100 transition">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-regular fa-bell text-black text-sm"></i>
+                            <span class="text-xs font-semibold text-neutral-800" data-i18n="app_notifications">Notifikasi HP & Browser</span>
+                        </div>
+                        <span id="notif-toggle-status" class="text-xs text-neutral-500 font-medium">Izinkan</span>
+                    </button>
+
+                    <!-- Reset Application Data -->
+                    <button onclick="clearAllData()" class="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-neutral-100 transition">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-rotate text-black text-sm"></i>
+                            <span class="text-xs font-semibold text-neutral-800" data-i18n="reset_data">Reset Semua Data</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-xs text-neutral-400"></i>
+                    </button>
+                </div>
+
+                <!-- Version -->
+                <div class="text-center pt-1">
+                    <p class="text-[11px] text-neutral-400 font-medium">K33p Mobile Web v1.2.0</p>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Navigation Bar -->
+        <nav class="bg-white/90 backdrop-blur-md border-t border-neutral-200 px-6 py-2 flex justify-between items-center z-20 sticky bottom-0">
+            <button onclick="switchTab('beranda')" id="nav-beranda" class="nav-item flex flex-col items-center gap-1 text-black font-semibold transition active:scale-90">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[10px]" data-i18n="home">Beranda</span>
+            </button>
+            <button onclick="switchTab('tugas')" id="nav-tugas" class="nav-item flex flex-col items-center gap-1 text-neutral-400 hover:text-black transition active:scale-90">
+                <i class="fa-solid fa-list-check text-lg"></i>
+                <span class="text-[10px]" data-i18n="tasks">Tugas</span>
+            </button>
+            
+            <!-- Floating Add Button -->
+            <button onclick="openAddTaskModal()" class="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center shadow-lg hover:bg-neutral-800 transition active:scale-90 -mt-5 ring-4 ring-white">
+                <i class="fa-solid fa-plus text-lg"></i>
+            </button>
+
+            <button onclick="switchTab('kalender')" id="nav-kalender" class="nav-item flex flex-col items-center gap-1 text-neutral-400 hover:text-black transition active:scale-90">
+                <i class="fa-regular fa-calendar-days text-lg"></i>
+                <span class="text-[10px]" data-i18n="calendar">Kalender</span>
+            </button>
+            <button onclick="switchTab('profil')" id="nav-profil" class="nav-item flex flex-col items-center gap-1 text-neutral-400 hover:text-black transition active:scale-90">
+                <i class="fa-regular fa-user text-lg"></i>
+                <span class="text-[10px]" data-i18n="profile">Profil</span>
+            </button>
+        </nav>
+
+        <!-- MODAL: Create New Task (Anti-Zoom Guaranteed) -->
+        <div id="modal-add-task" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden opacity-0 transition-opacity duration-200">
+            <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto no-scrollbar transform translate-y-full sm:translate-y-0 transition-transform duration-300" id="modal-add-content">
+                <div class="flex justify-between items-center border-b border-neutral-100 pb-3">
+                    <h3 class="text-lg font-bold text-black" data-i18n="add_new_task">Tambah Tugas Baru</h3>
+                    <button onclick="closeAddTaskModal()" class="w-7 h-7 rounded-full bg-neutral-100 text-neutral-600 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <form id="form-add-task" onsubmit="handleAddTask(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-neutral-700 mb-1" data-i18n="task_title">Judul Tugas *</label>
+                        <input type="text" id="input-title" required placeholder="Masukkan judul tugas..." class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-100 border border-transparent focus:border-black focus:bg-white outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-neutral-700 mb-1" data-i18n="description">Deskripsi (opsional)</label>
+                        <textarea id="input-desc" rows="2" placeholder="Tambahkan rincian tugas..." class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-100 border border-transparent focus:border-black focus:bg-white outline-none transition"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-xs font-bold text-neutral-700" data-i18n="category_course">Kategori / Matkul</label>
+                            </div>
+                            <select id="input-category" class="w-full px-3 py-2.5 rounded-xl bg-neutral-100 border border-transparent focus:border-black focus:bg-white outline-none transition">
+                                <!-- Dynamic options loaded via JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-neutral-700 mb-1" data-i18n="priority">Prioritas</label>
+                            <select id="input-priority" class="w-full px-3 py-2.5 rounded-xl bg-neutral-100 border border-transparent focus:border-black focus:bg-white outline-none transition">
+                                <option value="Rendah" data-i18n="low">Rendah</option>
+                                <option value="Sedang" selected data-i18n="medium">Sedang</option>
+                                <option value="Tinggi" data-i18n="high">Tinggi</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-neutral-700 mb-1" data-i18n="date_time">Tanggal & Waktu</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="date" id="input-date" required class="w-full px-3 py-2.5 rounded-xl bg-neutral-100 border border-transparent focus:border-black focus:bg-white outline-none">
+                            <input type="time" id="input-time" value="09:00" class="w-full px-3 py-2.5 rounded-xl bg-neutral-100 border border-transparent focus:border-black focus:bg-white outline-none">
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" class="w-full py-3 bg-black text-white text-xs font-bold rounded-xl hover:bg-neutral-800 transition active:scale-95 shadow-md" data-i18n="save_task">Simpan Tugas</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL: Manage Student Mata Kuliah / Categories -->
+        <div id="modal-manage-courses" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
+            <div class="bg-white w-11/12 max-w-sm rounded-3xl p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-neutral-100 pb-2">
+                    <h3 class="text-base font-bold text-black" data-i18n="manage_courses">Kelola Mata Kuliah</h3>
+                    <button onclick="closeManageCoursesModal()" class="w-7 h-7 rounded-full bg-neutral-100 text-neutral-600 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                
+                <form onsubmit="handleAddCourse(event)" class="flex gap-2">
+                    <input type="text" id="new-course-input" required placeholder="Nama Mata Kuliah Baru..." class="flex-1 px-3 py-2 rounded-xl bg-neutral-100 border border-transparent focus:border-black text-xs outline-none">
+                    <button type="submit" class="px-3.5 py-2 bg-black text-white text-xs font-bold rounded-xl">+</button>
+                </form>
+
+                <div class="space-y-1.5 max-h-48 overflow-y-auto no-scrollbar pt-1" id="course-list-container">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Notifications & Reminder Center -->
+        <div id="modal-notifications" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
+            <div class="bg-white w-11/12 max-w-sm rounded-3xl p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-neutral-100 pb-2">
+                    <h3 class="text-base font-bold text-black" data-i18n="notification_center">Pemberitahuan Tugas</h3>
+                    <button onclick="closeNotificationsModal()" class="w-7 h-7 rounded-full bg-neutral-100 text-neutral-600 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <div class="space-y-2 max-h-52 overflow-y-auto no-scrollbar" id="notif-list-container">
+                    <!-- Dynamic active pending task reminders -->
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="triggerPhoneTestNotification()" class="w-full py-2.5 bg-black text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2">
+                        <i class="fa-regular fa-bell"></i> <span data-i18n="test_phone_notif">Uji Coba Notifikasi HP</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Edit Profile -->
+        <div id="modal-edit-profile" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
+            <div class="bg-white w-11/12 max-w-sm rounded-3xl p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-neutral-100 pb-2">
+                    <h3 class="text-base font-bold text-black" data-i18n="edit_profile">Edit Profil</h3>
+                    <button onclick="closeEditProfileModal()" class="w-7 h-7 rounded-full bg-neutral-100 text-neutral-600 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <form onsubmit="handleSaveProfile(event)" class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-neutral-700 mb-1" data-i18n="full_name">Nama Lengkap</label>
+                        <input type="text" id="edit-name" required class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-100 text-xs border border-transparent focus:border-black focus:bg-white outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-neutral-700 mb-1">Email</label>
+                        <input type="email" id="edit-email" required class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-100 text-xs border border-transparent focus:border-black focus:bg-white outline-none">
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-black text-white text-xs font-bold rounded-xl" data-i18n="save_changes">Simpan Perubahan</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL: Google Sign-In Simulation -->
+        <div id="modal-login" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
+            <div class="bg-white w-11/12 max-w-sm rounded-3xl p-6 text-center space-y-4">
+                <div class="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mx-auto text-black text-xl">
+                    <i class="fa-brands fa-google"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-black" data-i18n="login_google_title">Login dengan Google</h3>
+                    <p class="text-xs text-neutral-500 mt-1" data-i18n="login_google_sub">Gunakan akun Google Anda untuk sinkronisasi K33p.</p>
+                </div>
+                <div class="space-y-2 pt-2">
+                    <button onclick="simulateGoogleLogin('Mahasiswa User', 'mahasiswa@gmail.com')" class="w-full py-2.5 bg-black text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-neutral-800 transition">
+                        <i class="fa-brands fa-google text-sm"></i> <span data-i18n="continue_google">Lanjutkan dengan Google</span>
+                    </button>
+                    <button onclick="closeLoginModal()" class="w-full py-2 text-xs font-medium text-neutral-500" data-i18n="cancel">Batal</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Search Tasks -->
+        <div id="modal-search" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start pt-12 justify-center hidden">
+            <div class="bg-white w-11/12 max-w-md rounded-2xl p-4 space-y-3 shadow-2xl">
+                <div class="flex items-center bg-neutral-100 rounded-xl px-3 py-2">
+                    <i class="fa-solid fa-magnifying-glass text-neutral-400 text-xs mr-2"></i>
+                    <input type="text" id="search-input" onkeyup="handleSearch()" placeholder="Cari judul tugas / mata kuliah..." class="bg-transparent text-xs outline-none w-full text-black">
+                    <button onclick="closeSearchModal()" class="text-neutral-400 hover:text-black text-xs ml-2"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="search-results" class="max-h-60 overflow-y-auto space-y-2 no-scrollbar">
+                    <!-- Results filled dynamically -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Application State
+        let tasks = [];
+        let courses = ['Pemrograman Web', 'Kalkulus', 'Algoritma & Struktur Data', 'Sistem Operasi', 'Kerja', 'Pribadi'];
+        let currentLang = 'id';
+        
+        let userProfile = {
+            name: "Pengguna K33p",
+            email: "pengguna@k33p.app",
+            isLoggedIn: false
+        };
+
+        let currentFilter = 'all'; 
+        let activeCatFilter = 'semua';
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let selectedCalendarDate = new Date().toISOString().split('T')[0];
+
+        // 6-Language Translation Dictionary
+        const translations = {
+            id: {
+                welcome: "Selamat Datang",
+                subtitle: "Kelola tugas harian Anda dengan efisien.",
+                total_tasks: "TOTAL TUGAS",
+                all: "Semua",
+                high: "Tinggi",
+                medium: "Sedang",
+                low: "Rendah",
+                calendar: "Kalender",
+                matkul: "Kuliah",
+                today_tasks: "Tugas Hari Ini",
+                see_all: "Lihat Semua",
+                all_tasks: "Semua Tugas",
+                pending: "Belum Selesai",
+                done: "Selesai",
+                schedule_for_date: "Jadwal Tanggal Ini",
+                profile_settings: "Profil & Pengaturan",
+                local_account: "Akun Lokal",
+                total: "Total",
+                select_language: "Bahasa / Language",
+                manage_courses: "Kelola Mata Kuliah",
+                login_google: "Masuk dengan Google",
+                app_notifications: "Notifikasi HP & Browser",
+                reset_data: "Reset Semua Data",
+                home: "Beranda",
+                tasks: "Tugas",
+                profile: "Profil",
+                add_new_task: "Tambah Tugas Baru",
+                task_title: "Judul Tugas *",
+                description: "Deskripsi (opsional)",
+                category_course: "Kategori / Matkul",
+                priority: "Prioritas",
+                date_time: "Tanggal & Waktu",
+                save_task: "Simpan Tugas",
+                notification_center: "Pemberitahuan Tugas",
+                test_phone_notif: "Uji Coba Notifikasi HP",
+                edit_profile: "Edit Profil",
+                full_name: "Nama Lengkap",
+                save_changes: "Simpan Perubahan",
+                login_google_title: "Login dengan Google",
+                login_google_sub: "Gunakan akun Google Anda untuk sinkronisasi K33p.",
+                continue_google: "Lanjutkan dengan Google",
+                cancel: "Batal"
+            },
+            en: {
+                welcome: "Welcome",
+                subtitle: "Manage your daily tasks efficiently.",
+                total_tasks: "TOTAL TASKS",
+                all: "All",
+                high: "High",
+                medium: "Medium",
+                low: "Low",
+                calendar: "Calendar",
+                matkul: "Courses",
+                today_tasks: "Today's Tasks",
+                see_all: "See All",
+                all_tasks: "All Tasks",
+                pending: "Pending",
+                done: "Completed",
+                schedule_for_date: "Schedule for Date",
+                profile_settings: "Profile & Settings",
+                local_account: "Local Account",
+                total: "Total",
+                select_language: "Language",
+                manage_courses: "Manage Courses",
+                login_google: "Sign in with Google",
+                app_notifications: "App Notifications",
+                reset_data: "Reset All Data",
+                home: "Home",
+                tasks: "Tasks",
+                profile: "Profile",
+                add_new_task: "Add New Task",
+                task_title: "Task Title *",
+                description: "Description (optional)",
+                category_course: "Category / Course",
+                priority: "Priority",
+                date_time: "Date & Time",
+                save_task: "Save Task",
+                notification_center: "Task Notifications",
+                test_phone_notif: "Test Phone Notification",
+                edit_profile: "Edit Profile",
+                full_name: "Full Name",
+                save_changes: "Save Changes",
+                login_google_title: "Login with Google",
+                login_google_sub: "Use your Google account to sync K33p.",
+                continue_google: "Continue with Google",
+                cancel: "Cancel"
+            },
+            ko: {
+                welcome: "환영합니다",
+                subtitle: "일일 업무를 효율적으로 관리하세요.",
+                total_tasks: "총 작업 수",
+                all: "전체",
+                high: "높음",
+                medium: "보통",
+                low: "낮음",
+                calendar: "달력",
+                matkul: "수업 과목",
+                today_tasks: "오늘의 작업",
+                see_all: "모두 보기",
+                all_tasks: "모든 작업",
+                pending: "미완료",
+                done: "완료됨",
+                schedule_for_date: "선택한 날짜 일정",
+                profile_settings: "프로필 및 설정",
+                local_account: "로컬 계정",
+                total: "전체",
+                select_language: "언어 선택",
+                manage_courses: "과목 관리",
+                login_google: "Google로 로그인",
+                app_notifications: "앱 알림 설정",
+                reset_data: "모든 데이터 초기화",
+                home: "홈",
+                tasks: "작업",
+                profile: "프로필",
+                add_new_task: "새 작업 추가",
+                task_title: "작업 제목 *",
+                description: "설명 (선택 사항)",
+                category_course: "카테고리 / 과목",
+                priority: "우선순위",
+                date_time: "날짜 및 시간",
+                save_task: "작업 저장",
+                notification_center: "작업 알림 센터",
+                test_phone_notif: "모바일 알림 테스트",
+                edit_profile: "프로필 수정",
+                full_name: "성명",
+                save_changes: "변경사항 저장",
+                login_google_title: "Google 로그인",
+                login_google_sub: "K33p 동기화를 위해 Google 계정을 사용하세요.",
+                continue_google: "Google로 계속하기",
+                cancel: "취소"
+            },
+            ja: {
+                welcome: "ようこそ",
+                subtitle: "毎日のタスクを効率的に管理します。",
+                total_tasks: "タスク合計",
+                all: "すべて",
+                high: "高",
+                medium: "中",
+                low: "低",
+                calendar: "カレンダー",
+                matkul: "講義・科目",
+                today_tasks: "今日のタスク",
+                see_all: "すべて見る",
+                all_tasks: "すべてのタスク",
+                pending: "未完了",
+                done: "完了",
+                schedule_for_date: "選択日の予定",
+                profile_settings: "プロフィール設定",
+                local_account: "ローカルアカウント",
+                total: "合計",
+                select_language: "言語切り替え",
+                manage_courses: "科目を管理",
+                login_google: "Googleでログイン",
+                app_notifications: "アプリ通知",
+                reset_data: "全データをリセット",
+                home: "ホーム",
+                tasks: "タスク",
+                profile: "マイページ",
+                add_new_task: "タスクを追加",
+                task_title: "タスク名 *",
+                description: "詳細 (任意)",
+                category_course: "カテゴリ / 科目",
+                priority: "優先度",
+                date_time: "日時",
+                save_task: "タスクを保存",
+                notification_center: "タスク通知",
+                test_phone_notif: "スマホ通知をテスト",
+                edit_profile: "プロフィール編集",
+                full_name: "氏名",
+                save_changes: "変更を保存",
+                login_google_title: "Googleでログイン",
+                login_google_sub: "Googleアカウントで同期します。",
+                continue_google: "Googleで進む",
+                cancel: "キャンセル"
+            },
+            th: {
+                welcome: "ยินดีต้อนรับ",
+                subtitle: "จัดการงานประจำวันของคุณอย่างมีประสิทธิภาพ",
+                total_tasks: "งานทั้งหมด",
+                all: "ทั้งหมด",
+                high: "สูง",
+                medium: "ปานกลาง",
+                low: "ต่ำ",
+                calendar: "ปฏิทิน",
+                matkul: "วิชาเรียน",
+                today_tasks: "งานวันนี้",
+                see_all: "ดูทั้งหมด",
+                all_tasks: "งานทั้งหมด",
+                pending: "ยังไม่เสร็จ",
+                done: "เสร็จแล้ว",
+                schedule_for_date: "กำหนดการสำหรับวันที่",
+                profile_settings: "โปรไฟล์และการตั้งค่า",
+                local_account: "บัญชีท้องถิ่น",
+                total: "รวม",
+                select_language: "เลือกภาษา",
+                manage_courses: "จัดการรายวิชา",
+                login_google: "ลงชื่อเข้าใช้ด้วย Google",
+                app_notifications: "การแจ้งเตือนแอป",
+                reset_data: "รีเซ็ตข้อมูลทั้งหมด",
+                home: "หน้าแรก",
+                tasks: "งาน",
+                profile: "โปรไฟล์",
+                add_new_task: "เพิ่มงานใหม่",
+                task_title: "ชื่องาน *",
+                description: "รายละเอียด (ไม่บังคับ)",
+                category_course: "หมวดหมู่ / วิชา",
+                priority: "ความสำคัญ",
+                date_time: "วันที่และเวลา",
+                save_task: "บันทึกงาน",
+                notification_center: "ศูนย์การแจ้งเตือนงาน",
+                test_phone_notif: "ทดสอบการแจ้งเตือนมือถือ",
+                edit_profile: "แก้ไขโปรไฟล์",
+                full_name: "ชื่อ-นามสกุล",
+                save_changes: "บันทึกการเปลี่ยนแปลง",
+                login_google_title: "เข้าสู่ระบบด้วย Google",
+                login_google_sub: "ใช้บัญชี Google เพื่อซิงค์ข้อมูล K33p",
+                continue_google: "ดำเนินการต่อด้วย Google",
+                cancel: "ยกเลิก"
+            },
+            fil: {
+                welcome: "Maligayang Pagdating",
+                subtitle: "Pamahalaan ang iyong mga gawain nang mahusay.",
+                total_tasks: "KABUUANG GAWAIN",
+                all: "Lahat",
+                high: "Mataas",
+                medium: "Katamtaman",
+                low: "Mababa",
+                calendar: "Kalendaryo",
+                matkul: "Mga Asignatura",
+                today_tasks: "Mga Gawain Ngayon",
+                see_all: "Tingnan Lahat",
+                all_tasks: "Lahat ng Gawain",
+                pending: "Hindi Pa Tapos",
+                done: "Tapos Na",
+                schedule_for_date: "Iskedyul para sa Petsa",
+                profile_settings: "Profile at Mga Setting",
+                local_account: "Lokal na Account",
+                total: "Kabuuan",
+                select_language: "Wika",
+                manage_courses: "Pamahalaan ang Asignatura",
+                login_google: "Mag-login gamit ang Google",
+                app_notifications: "Mga Abiso ng App",
+                reset_data: "I-reset ang Lahat ng Data",
+                home: "Tahanan",
+                tasks: "Gawain",
+                profile: "Profile",
+                add_new_task: "Magdagdag ng Bagong Gawain",
+                task_title: "Pamagat ng Gawain *",
+                description: "Deskripsyon (opsyonal)",
+                category_course: "Kategorya / Asignatura",
+                priority: "Antas ng Priyoridad",
+                date_time: "Petsa at Oras",
+                save_task: "I-save ang Gawain",
+                notification_center: "Mga Abiso ng Gawain",
+                test_phone_notif: "Subukan ang Abiso sa Telepono",
+                edit_profile: "I-edit ang Profile",
+                full_name: "Buong Pangalan",
+                save_changes: "I-save ang Pagbabago",
+                login_google_title: "Mag-login gamit ang Google",
+                login_google_sub: "Gamitin ang Google account para sa pag-sync.",
+                continue_google: "Magpatuloy gamit ang Google",
+                cancel: "Kanselahin"
+            }
+        };
+
+        // Window Init
+        window.onload = function() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('input-date').value = todayStr;
+
+            renderCourseSelectOptions();
+            renderAll();
+            updateNotificationBadge();
+        };
+
+        // Switch Language Across Entire App
+        function changeLanguage(langKey) {
+            currentLang = langKey;
+            const langData = translations[langKey] || translations['id'];
+
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (langData[key]) {
+                    element.innerText = langData[key];
+                }
+            });
+
+            renderAll();
+        }
+
+        // Render Main UI Elements
+        function renderAll() {
+            updateDashboardStats();
+            renderTodayTasks();
+            renderAllTasksList();
+            renderCalendar();
+            renderProfile();
+            updateNotificationBadge();
+        }
+
+        function updateDashboardStats() {
+            const total = tasks.length;
+            const done = tasks.filter(t => t.completed).length;
+            const pending = total - done;
+
+            const lang = translations[currentLang];
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-done').innerText = `${done} ${lang.done}`;
+            document.getElementById('stat-pending').innerText = `${pending} ${lang.pending}`;
+
+            document.getElementById('profile-stat-total').innerText = total;
+            document.getElementById('profile-stat-done').innerText = done;
+            document.getElementById('profile-stat-pending').innerText = pending;
+        }
+
+        function renderTodayTasks() {
+            const container = document.getElementById('today-tasks-list');
+            container.innerHTML = '';
+
+            let filtered = tasks;
+
+            if (activeCatFilter === 'tinggi') {
+                filtered = filtered.filter(t => t.priority === 'Tinggi');
+            } else if (activeCatFilter === 'kuliah') {
+                filtered = filtered.filter(t => courses.includes(t.category));
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 bg-neutral-50 rounded-2xl border border-dashed border-neutral-200">
+                        <i class="fa-regular fa-clipboard text-2xl text-neutral-300 mb-2"></i>
+                        <p class="text-xs font-medium text-neutral-500">${translations[currentLang].pending} (0)</p>
+                        <button onclick="openAddTaskModal()" class="mt-2 text-xs text-black font-semibold underline">${translations[currentLang].add_new_task}</button>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(task => {
+                container.appendChild(createTaskCard(task));
+            });
+        }
+
+        function renderAllTasksList() {
+            const container = document.getElementById('all-tasks-list');
+            container.innerHTML = '';
+
+            let list = tasks;
+            if (currentFilter === 'pending') list = tasks.filter(t => !t.completed);
+            if (currentFilter === 'done') list = tasks.filter(t => t.completed);
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 text-neutral-400">
+                        <p class="text-xs font-medium">Kosong / Empty</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.forEach(task => {
+                container.appendChild(createTaskCard(task));
+            });
+        }
+
+        function createTaskCard(task) {
+            const card = document.createElement('div');
+            card.className = `p-3.5 bg-neutral-50 rounded-2xl border border-neutral-200/70 flex items-center justify-between gap-3 transition hover:border-black/30 ${task.completed ? 'opacity-60 bg-neutral-100/50' : ''}`;
+
+            const priorityBadgeColor = 
+                task.priority === 'Tinggi' ? 'bg-black text-white' : 
+                task.priority === 'Sedang' ? 'bg-neutral-200 text-neutral-800' : 'bg-neutral-100 text-neutral-600 border border-neutral-200';
+
+            card.innerHTML = `
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <button onclick="toggleTaskCompletion('${task.id}')" class="w-6 h-6 rounded-full border-2 border-neutral-400 flex items-center justify-center transition ${task.completed ? 'bg-black border-black text-white' : 'hover:border-black'}">
+                        ${task.completed ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+                    </button>
+                    <div class="min-w-0 flex-1">
+                        <h4 class="text-xs font-bold text-black truncate ${task.completed ? 'line-through text-neutral-400' : ''}">${escapeHtml(task.title)}</h4>
+                        <div class="flex items-center gap-2 mt-0.5 text-[10px] text-neutral-500 font-medium">
+                            <span><i class="fa-regular fa-clock mr-1"></i>${task.time}</span>
+                            <span>•</span>
+                            <span class="truncate">${escapeHtml(task.category)}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[9px] font-semibold px-2 py-0.5 rounded-full ${priorityBadgeColor}">${task.priority}</span>
+                    <button onclick="deleteTask('${task.id}')" class="text-neutral-300 hover:text-black p-1 text-xs transition">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                </div>
+            `;
+            return card;
+        }
+
+        // Student Mata Kuliah / Category Manager Logic
+        function renderCourseSelectOptions() {
+            const select = document.getElementById('input-category');
+            select.innerHTML = '';
+            courses.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.innerText = c;
+                select.appendChild(opt);
+            });
+        }
+
+        function openManageCoursesModal() {
+            renderCourseListModal();
+            const modal = document.getElementById('modal-manage-courses');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        function closeManageCoursesModal() {
+            const modal = document.getElementById('modal-manage-courses');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function renderCourseListModal() {
+            const container = document.getElementById('course-list-container');
+            container.innerHTML = '';
+            courses.forEach((c, index) => {
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center p-2 rounded-xl bg-neutral-100 text-xs text-black font-medium";
+                div.innerHTML = `
+                    <span>${escapeHtml(c)}</span>
+                    <button onclick="removeCourse(${index})" class="text-neutral-400 hover:text-black"><i class="fa-solid fa-xmark"></i></button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function handleAddCourse(e) {
+            e.preventDefault();
+            const val = document.getElementById('new-course-input').value.trim();
+            if (val && !courses.includes(val)) {
+                courses.push(val);
+                document.getElementById('new-course-input').value = '';
+                renderCourseSelectOptions();
+                renderCourseListModal();
+            }
+        }
+
+        function removeCourse(index) {
+            if (courses.length > 1) {
+                courses.splice(index, 1);
+                renderCourseSelectOptions();
+                renderCourseListModal();
+            }
+        }
+
+        // Task CRUD Actions
+        function handleAddTask(e) {
+            e.preventDefault();
+            const title = document.getElementById('input-title').value.trim();
+            const desc = document.getElementById('input-desc').value.trim();
+            const category = document.getElementById('input-category').value;
+            const priority = document.getElementById('input-priority').value;
+            const date = document.getElementById('input-date').value;
+            const time = document.getElementById('input-time').value;
+
+            if (!title) return;
+
+            const newTask = {
+                id: 'task_' + Date.now(),
+                title: title,
+                desc: desc,
+                category: category,
+                priority: priority,
+                date: date,
+                time: time,
+                completed: false
+            };
+
+            tasks.unshift(newTask);
+            closeAddTaskModal();
+            document.getElementById('form-add-task').reset();
+            
+            document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('input-time').value = "09:00";
+
+            renderAll();
+        }
+
+        function toggleTaskCompletion(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                renderAll();
+            }
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            renderAll();
+        }
+
+        function filterCategory(cat) {
+            activeCatFilter = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if (btn.dataset.cat === cat) {
+                    btn.classList.add('bg-black', 'text-white');
+                    btn.classList.remove('bg-neutral-100');
+                    btn.querySelectorAll('i, span').forEach(el => el.classList.add('text-white'));
+                } else {
+                    btn.classList.remove('bg-black', 'text-white');
+                    btn.classList.add('bg-neutral-100');
+                    btn.querySelectorAll('i, span').forEach(el => {
+                        el.classList.remove('text-white');
+                        el.classList.add('text-neutral-700');
+                    });
+                }
+            });
+            renderTodayTasks();
+        }
+
+        function setTaskFilter(filter) {
+            currentFilter = filter;
+            ['all', 'pending', 'done'].forEach(f => {
+                const btn = document.getElementById(`filter-${f}`);
+                if (f === filter) {
+                    btn.className = "flex-1 py-1.5 rounded-lg bg-white shadow-sm font-semibold text-black transition";
+                } else {
+                    btn.className = "flex-1 py-1.5 rounded-lg text-neutral-500 hover:text-black transition";
+                }
+            });
+            renderAllTasksList();
+        }
+
+        // Tab Switcher
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(nav => {
+                nav.classList.remove('text-black', 'font-semibold');
+                nav.classList.add('text-neutral-400');
+            });
+
+            const selectedTab = document.getElementById(`tab-${tabName}`);
+            const selectedNav = document.getElementById(`nav-${tabName}`);
+
+            if (selectedTab) selectedTab.classList.add('active');
+            if (selectedNav) {
+                selectedNav.classList.add('text-black', 'font-semibold');
+                selectedNav.classList.remove('text-neutral-400');
+            }
+        }
+
+        // Notifications & Browser Push System
+        function updateNotificationBadge() {
+            const pendingCount = tasks.filter(t => !t.completed).length;
+            const badge = document.getElementById('notif-badge');
+            if (pendingCount > 0) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function openNotificationsModal() {
+            const container = document.getElementById('notif-list-container');
+            container.innerHTML = '';
+
+            const pending = tasks.filter(t => !t.completed);
+            if (pending.length === 0) {
+                container.innerHTML = `<p class="text-xs text-neutral-400 text-center py-4">Tidak ada pengingat tugas menggantung.</p>`;
+            } else {
+                pending.forEach(t => {
+                    const div = document.createElement('div');
+                    div.className = "p-3 rounded-2xl bg-neutral-100 text-xs border border-neutral-200/80 space-y-0.5";
+                    div.innerHTML = `
+                        <p class="font-bold text-black">${escapeHtml(t.title)}</p>
+                        <p class="text-[10px] text-neutral-500"><i class="fa-regular fa-clock mr-1"></i>${t.date} (${t.time}) • ${t.category}</p>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+
+            const modal = document.getElementById('modal-notifications');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        function closeNotificationsModal() {
+            const modal = document.getElementById('modal-notifications');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function requestNotificationPermission() {
+            if ("Notification" in window) {
+                Notification.requestPermission().then(permission => {
+                    const status = document.getElementById('notif-toggle-status');
+                    if (permission === "granted") {
+                        status.innerText = "Aktif";
+                        status.className = "text-xs text-black font-bold";
+                    } else {
+                        status.innerText = "Ditolak";
+                    }
+                });
+            } else {
+                alert("Browser ini tidak mendukung Web Notifications.");
+            }
+        }
+
+        function triggerPhoneTestNotification() {
+            const pendingCount = tasks.filter(t => !t.completed).length;
+            const title = "K33p Reminder";
+            const options = {
+                body: pendingCount > 0 ? `Anda memiliki ${pendingCount} tugas belum selesai!` : "Semua tugas Anda telah selesai hari ini! 🎉",
+                icon: "https://placehold.co/128x128/000000/FFFFFF?text=33"
+            };
+
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(title, options);
+            } else {
+                // Fallback custom alert card inside app if browser permissions are disabled
+                alert(`${title}\n${options.body}`);
+            }
+        }
+
+        // Calendar Logic
+        function renderCalendar() {
+            const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            document.getElementById('calendar-month-year').innerText = `${monthNames[currentMonth]} ${currentYear}`;
+
+            const grid = document.getElementById('calendar-days-grid');
+            grid.innerHTML = '';
+
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                grid.appendChild(document.createElement('div'));
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const monthFormatted = String(currentMonth + 1).padStart(2, '0');
+                const dayFormatted = String(day).padStart(2, '0');
+                const dateStr = `${currentYear}-${monthFormatted}-${dayFormatted}`;
+
+                const btn = document.createElement('button');
+                btn.className = `p-2 rounded-xl text-xs font-semibold transition ${dateStr === selectedCalendarDate ? 'bg-black text-white shadow-md' : 'hover:bg-neutral-200 text-neutral-800'}`;
+                btn.innerText = day;
+                btn.onclick = () => {
+                    selectedCalendarDate = dateStr;
+                    renderCalendar();
+                };
+                grid.appendChild(btn);
+            }
+
+            const calTasksContainer = document.getElementById('calendar-tasks-list');
+            calTasksContainer.innerHTML = '';
+
+            const matchedTasks = tasks.filter(t => t.date === selectedCalendarDate);
+            if (matchedTasks.length === 0) {
+                calTasksContainer.innerHTML = `<p class="text-xs text-neutral-400 text-center py-4">Tidak ada jadwal pada tanggal ini.</p>`;
+            } else {
+                matchedTasks.forEach(t => calTasksContainer.appendChild(createTaskCard(t)));
+            }
+        }
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+
+        // User Profile & Authentication Simulation
+        function renderProfile() {
+            document.getElementById('profile-display-name').innerText = userProfile.name;
+            document.getElementById('profile-display-email').innerText = userProfile.email;
+            
+            const initial = userProfile.name.charAt(0).toUpperCase() || "U";
+            document.getElementById('profile-avatar-large').innerText = initial;
+            document.getElementById('avatar-initials').innerText = initial;
+
+            const badge = document.getElementById('auth-status-badge');
+            const googleBtnText = document.getElementById('google-btn-text');
+
+            if (userProfile.isLoggedIn) {
+                badge.innerText = "Terhubung Google";
+                badge.className = "inline-block mt-1 text-[10px] bg-black text-white px-2 py-0.5 rounded-full font-medium";
+                googleBtnText.innerText = "Keluar Akun Google";
+            } else {
+                badge.innerText = translations[currentLang].local_account;
+                badge.className = "inline-block mt-1 text-[10px] bg-neutral-200 px-2 py-0.5 rounded-full font-medium text-neutral-700";
+                googleBtnText.innerText = translations[currentLang].login_google;
+            }
+        }
+
+        function openEditProfileModal() {
+            document.getElementById('edit-name').value = userProfile.name;
+            document.getElementById('edit-email').value = userProfile.email;
+            const modal = document.getElementById('modal-edit-profile');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        function closeEditProfileModal() {
+            const modal = document.getElementById('modal-edit-profile');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function handleSaveProfile(e) {
+            e.preventDefault();
+            userProfile.name = document.getElementById('edit-name').value.trim();
+            userProfile.email = document.getElementById('edit-email').value.trim();
+            closeEditProfileModal();
+            renderProfile();
+        }
+
+        function openLoginModal() {
+            if (userProfile.isLoggedIn) {
+                userProfile.isLoggedIn = false;
+                userProfile.name = "Pengguna K33p";
+                userProfile.email = "pengguna@k33p.app";
+                renderProfile();
+                return;
+            }
+            const modal = document.getElementById('modal-login');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        function closeLoginModal() {
+            const modal = document.getElementById('modal-login');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function simulateGoogleLogin(name, email) {
+            userProfile.name = name;
+            userProfile.email = email;
+            userProfile.isLoggedIn = true;
+            closeLoginModal();
+            renderProfile();
+        }
+
+        // Add Task Modal Controls
+        function openAddTaskModal() {
+            const modal = document.getElementById('modal-add-task');
+            const content = document.getElementById('modal-add-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeAddTaskModal() {
+            const modal = document.getElementById('modal-add-task');
+            const content = document.getElementById('modal-add-content');
+            content.classList.add('translate-y-full');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        // Search Modal logic
+        function openSearchModal() {
+            document.getElementById('modal-search').classList.remove('hidden');
+            document.getElementById('search-input').focus();
+        }
+
+        function closeSearchModal() {
+            document.getElementById('modal-search').classList.add('hidden');
+            document.getElementById('search-input').value = '';
+            document.getElementById('search-results').innerHTML = '';
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const resultsContainer = document.getElementById('search-results');
+            resultsContainer.innerHTML = '';
+
+            if (!query) return;
+
+            const matches = tasks.filter(t => 
+                t.title.toLowerCase().includes(query) || 
+                t.desc.toLowerCase().includes(query) ||
+                t.category.toLowerCase().includes(query)
+            );
+
+            if (matches.length === 0) {
+                resultsContainer.innerHTML = '<p class="text-xs text-neutral-400 py-2 text-center">Tidak ditemukan.</p>';
+            } else {
+                matches.forEach(t => resultsContainer.appendChild(createTaskCard(t)));
+            }
+        }
+
+        function clearAllData() {
+            tasks = [];
+            renderAll();
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
